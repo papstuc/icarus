@@ -6,5 +6,5 @@ namespace engine
 {
 	bool initialize();
 
-	void run_visuals(const ImDrawList* draw_list);
+	void run_visuals(ImDrawList* draw_list);
 }

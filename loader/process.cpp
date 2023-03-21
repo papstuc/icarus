@@ -5,21 +5,21 @@
 #include "ntapi.hpp"
 #include "process.hpp"
 
-bool process::inject_dll(const std::uint64_t process_id, const wchar_t* file_path, const std::uint64_t size)
+bool process::inject_dll(std::uint64_t process_id, const wchar_t* file_path, std::uint64_t size)
 {
     if (!process_id || !file_path || !size)
     {
         return false;
     }
 
-	const HANDLE remote_process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(process_id));
+	HANDLE remote_process = OpenProcess(PROCESS_ALL_ACCESS, FALSE, static_cast<DWORD>(process_id));
 
     if (!remote_process)
     {
         return false;
     }
 
-    const LPVOID remote_memory = VirtualAllocEx(remote_process, nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    void* remote_memory = VirtualAllocEx(remote_process, nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
     if (!remote_memory)
     {
@@ -33,7 +33,7 @@ bool process::inject_dll(const std::uint64_t process_id, const wchar_t* file_pat
         return false;
     }
 
-    const HANDLE thread = CreateRemoteThread(remote_process, nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadLibrary), remote_memory, 0, nullptr);
+    HANDLE thread = CreateRemoteThread(remote_process, nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(LoadLibrary), remote_memory, 0, nullptr);
     
     if (!thread)
     {
@@ -49,7 +49,7 @@ bool process::inject_dll(const std::uint64_t process_id, const wchar_t* file_pat
 
 bool process::start_process(const wchar_t* file_path, const wchar_t* arguments)
 {
-	const HWND shell = GetShellWindow();
+	HWND shell = GetShellWindow();
 
     DWORD pid;
 	GetWindowThreadProcessId(shell, &pid);
@@ -59,7 +59,7 @@ bool process::start_process(const wchar_t* file_path, const wchar_t* arguments)
     std::uint64_t buffer_size = 0;
     InitializeProcThreadAttributeList(nullptr, 1, 0, &buffer_size);
 
-    const PPROC_THREAD_ATTRIBUTE_LIST thread_list = static_cast<PPROC_THREAD_ATTRIBUTE_LIST>(VirtualAlloc(nullptr, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
+    PPROC_THREAD_ATTRIBUTE_LIST thread_list = static_cast<PPROC_THREAD_ATTRIBUTE_LIST>(VirtualAlloc(nullptr, buffer_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE));
 
     if (!thread_list)
     {

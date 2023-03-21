@@ -31,6 +31,8 @@ namespace config
 		bool mermaids = false;
 		bool lost_cargo = false;
 		float item_render_distance = 500.f;
+
+		bool hud_indicators = false;
 	} context_t;
 
 	typedef struct _config_t

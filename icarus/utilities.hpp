@@ -5,9 +5,9 @@
 namespace utilities
 {
 	std::uint8_t* pattern_scan(const wchar_t* module_name, const char* signature);
-	std::uint8_t* resolve_rip(const std::uint8_t* address, const std::uint32_t rva_offset, const std::uint32_t rip_offset);
+	std::uint8_t* resolve_rip(std::uint8_t* address, std::uint32_t rva_offset, std::uint32_t rip_offset);
 
-	inline std::uint32_t color_to_value(const float* color)
+	inline std::uint32_t color_to_value(float* color)
 	{
 		std::uint32_t out = 0;
 

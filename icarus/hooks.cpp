@@ -25,8 +25,8 @@ static ID3D11RenderTargetView* render_view = nullptr;
 
 bool hooks::initialize()
 {
-	const LPVOID swap_chain_present_target = static_cast<LPVOID>(utilities::pattern_scan(L"dxgi.dll", "E9 ? ? ? ? 48 89 74 24 ? 55"));
-	const LPVOID swap_chain_resize_buffers_target = static_cast<LPVOID>(utilities::pattern_scan(L"dxgi.dll", "E9 ? ? ? ? 54 41 55 41 56 41 57 48 8D 68 ? 48 81 EC ? ? ? ? 48 C7 45 ? ? ? ? ? 48 89 58 ? 48 89 70 ? 48 89 78 ? 45 8B F9 45 8B E0 44 8B EA 48 8B F9 8B 45 ? 89 44 24 ? 8B 75 ? 89 74 24 ? 44 89 4C 24 ? 45 8B C8 44 8B C2 48 8B D1 48 8D 4D ? E8 ? ? ? ? 48 8B C7 48 8D 4F ? 48 F7 D8 48 1B DB 48 23 D9 48 8B 4B ? 48 8B 01 48 8B 40 ? FF 15 ? ? ? ? 48 89 5D ? 8B 87 ? ? ? ? 89 45 ? 45 33 F6"));
+	void* swap_chain_present_target = static_cast<void*>(utilities::pattern_scan(L"dxgi.dll", "E9 ? ? ? ? 48 89 74 24 ? 55"));
+	void* swap_chain_resize_buffers_target = static_cast<void*>(utilities::pattern_scan(L"dxgi.dll", "E9 ? ? ? ? 54 41 55 41 56 41 57 48 8D 68 ? 48 81 EC ? ? ? ? 48 C7 45 ? ? ? ? ? 48 89 58 ? 48 89 70 ? 48 89 78 ? 45 8B F9 45 8B E0 44 8B EA 48 8B F9 8B 45 ? 89 44 24 ? 8B 75 ? 89 74 24 ? 44 89 4C 24 ? 45 8B C8 44 8B C2 48 8B D1 48 8D 4D ? E8 ? ? ? ? 48 8B C7 48 8D 4F ? 48 F7 D8 48 1B DB 48 23 D9 48 8B 4B ? 48 8B 01 48 8B 40 ? FF 15 ? ? ? ? 48 89 5D ? 8B 87 ? ? ? ? 89 45 ? 45 33 F6"));
 
 	if (MH_Initialize() != MH_OK)
 	{
@@ -154,7 +154,7 @@ LRESULT __stdcall hooks::window_procedure::hook(HWND window, std::uint32_t messa
 
 	if (config::menu_open)
 	{
-		const std::int32_t imgui_cursor = menu::get_mouse_cursor();
+		std::int32_t imgui_cursor = menu::get_mouse_cursor();
 		LPWSTR win32_cursor = IDC_ARROW;
 
 		switch (imgui_cursor)

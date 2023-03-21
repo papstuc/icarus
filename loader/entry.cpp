@@ -7,7 +7,7 @@
 #include "registry.hpp"
 #include "process.hpp"
 
-static bool choose_file(wchar_t* output, const std::uint64_t size)
+static bool choose_file(wchar_t* output, std::uint64_t size)
 {
 	if (!output)
 	{

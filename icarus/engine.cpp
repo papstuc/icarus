@@ -16,9 +16,9 @@ bool engine::initialize()
 	// gobjects - 89 0D ? ? ? ? 48 8B DF - 2, 6
 	// gnames - 48 89 1D ? ? ? ? 8B C3 - 3, 7
 
-	const LPVOID gworld = static_cast<LPVOID>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "48 8B 0D ? ? ? ? 4C 8B CB 4C 8B C7"), 3, 7));
-	const LPVOID gobjects = static_cast<LPVOID>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "89 0D ? ? ? ? 48 8B DF"), 2, 6));
-	const LPVOID gnames = static_cast<LPVOID>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "48 89 1D ? ? ? ? 8B C3"), 3, 7));
+	void* gworld = static_cast<void*>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "48 8B 0D ? ? ? ? 4C 8B CB 4C 8B C7"), 3, 7));
+	void* gobjects = static_cast<void*>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "89 0D ? ? ? ? 48 8B DF"), 2, 6));
+	void* gnames = static_cast<void*>(utilities::resolve_rip(utilities::pattern_scan(nullptr, "48 89 1D ? ? ? ? 8B C3"), 3, 7));
 
 	if (!gworld || !gobjects || !gnames)
 	{
@@ -42,14 +42,12 @@ bool engine::initialize()
 	return true;
 }
 
-static void ship_esp(const ImDrawList* draw_list, const ACharacter* entity)
+static void ship_esp(ImDrawList* draw_list, ACharacter* actor)
 {
 	if (!config::context.ship_esp)
 	{
 		return;
 	}
-
-	ACharacter* actor = const_cast<ACharacter*>(entity);
 
 	if (!actor)
 	{
@@ -58,10 +56,10 @@ static void ship_esp(const ImDrawList* draw_list, const ACharacter* entity)
 
 	if (actor->isShip() || actor->isFarShip())
 	{
-		const FVector local_player_location = local_player_character->K2_GetActorLocation();
+		FVector local_player_location = local_player_character->K2_GetActorLocation();
 		FVector location = actor->K2_GetActorLocation();
-		const float distance = local_player_location.DistTo(location) * 0.01f;
 
+		float distance = local_player_location.DistTo(location) * 0.01f;
 		if (distance > config::context.ship_render_distance)
 		{
 			return;
@@ -76,7 +74,7 @@ static void ship_esp(const ImDrawList* draw_list, const ACharacter* entity)
 
 		char buffer[MAX_PATH] = { 0 };
 
-		const float velocity = (actor->GetVelocity() * 0.01f).Size();
+		float velocity = (actor->GetVelocity() * 0.01f).Size();
 
 		bool ship_found = true;
 		if (actor->isShip() && distance < 1726.f)
@@ -138,45 +136,43 @@ static void ship_esp(const ImDrawList* draw_list, const ACharacter* entity)
 
 		if (ship_found)
 		{
-			const_cast<ImDrawList*>(draw_list)->AddText(nullptr, 20.f, ImVec2(screen.X, screen.Y), utilities::color_to_value(config::context.ship_text_color), buffer);
+			draw_list->AddText(nullptr, 20.f, ImVec2(screen.X, screen.Y), utilities::color_to_value(config::context.ship_text_color), buffer);
 		}
 	}
 }
 
-static void ship_hole_esp(const ImDrawList* draw_list, const ACharacter* lp)
+static void ship_hole_esp(ImDrawList* draw_list, ACharacter* local_player)
 {
 	if (!config::context.draw_ship_holes)
 	{
 		return;
 	}
 
-	ACharacter* local_player = const_cast<ACharacter*>(lp);
-
 	if (!local_player || local_player->IsDead())
 	{
 		return;
 	}
 
-	const ACharacter* ship = local_player->GetCurrentShip();
+	ACharacter* ship = local_player->GetCurrentShip();
 
-	if (!ship || !const_cast<ACharacter*>(ship)->isShip())
+	if (!ship || !ship->isShip())
 	{
 		return;
 	}
 
-	const AHullDamage* damage = const_cast<ACharacter*>(ship)->GetHullDamage();
+	AHullDamage* damage = ship->GetHullDamage();
 
 	if (!damage)
 	{
 		return;
 	}
 
-	const TArray<ACharacter*> holes = damage->ActiveHullDamageZones;
+	TArray<ACharacter*> holes = damage->ActiveHullDamageZones;
 
 	for (std::uint32_t i = 0; i < holes.Count; i++)
 	{
-		const ACharacter* hole = holes[i];
-		const FVector location = const_cast<ACharacter*>(hole)->K2_GetActorLocation();
+		ACharacter* hole = holes[i];
+		FVector location = hole->K2_GetActorLocation();
 
 		FVector2D screen = { };
 		if (player_controller->ProjectWorldLocationToScreen(location, screen))
@@ -184,24 +180,107 @@ static void ship_hole_esp(const ImDrawList* draw_list, const ACharacter* lp)
 			continue;
 		}
 
-		const_cast<ImDrawList*>(draw_list)->AddLine(ImVec2(screen.X - 6.f, screen.Y + 6.f), ImVec2(screen.X + 6.f, screen.Y - 6.f), utilities::color_to_value(config::context.ship_hole_color));
-		const_cast<ImDrawList*>(draw_list)->AddLine(ImVec2(screen.X - 6.f, screen.Y - 6.f), ImVec2(screen.X + 6.f, screen.Y + 6.f), utilities::color_to_value(config::context.ship_hole_color));
+		draw_list->AddLine(ImVec2(screen.X - 6.f, screen.Y + 6.f), ImVec2(screen.X + 6.f, screen.Y - 6.f), utilities::color_to_value(config::context.ship_hole_color));
+		draw_list->AddLine(ImVec2(screen.X - 6.f, screen.Y - 6.f), ImVec2(screen.X + 6.f, screen.Y + 6.f), utilities::color_to_value(config::context.ship_hole_color));
 	}
 }
 
-static void player_esp(const ImDrawList* draw_list, ACharacter* actor)
+static void player_esp(ImDrawList* draw_list, ACharacter* actor)
+{
+	if (!config::context.player_esp)
+	{
+		return;
+	}
+
+	if (!actor || !actor->isPlayer() || actor->IsDead())
+	{
+		return;
+	}
+
+	if (UCrewFunctions::AreCharactersInSameCrew(actor, local_player_actor) && !config::context.teammate_esp)
+	{
+		return;
+	}
+
+	FVector local_player_location = local_player_character->K2_GetActorLocation();
+	FVector location = actor->K2_GetActorLocation();
+
+	float distance = local_player_location.DistTo(location) * 0.01f;
+	if (distance > config::context.player_render_distance)
+	{
+		return;
+	}
+
+	FVector origin, extent = { };
+	actor->GetActorBounds(true, origin, extent);
+
+	FVector2D head = { };
+	if (!player_controller->ProjectWorldLocationToScreen({ location.X, location.Y, location.Z + extent.Z }, head))
+	{
+		return;
+	}
+
+	FVector2D foot = { };
+	if (!player_controller->ProjectWorldLocationToScreen({ location.X, location.Y, location.Z - extent.Z }, foot))
+	{
+		return;
+	}
+
+	if (!player_controller->LineOfSightTo(actor, player_controller->PlayerCameraManager->GetCameraLocation(), false))
+	{
+		return;
+	}
+
+	float height = std::abs(foot.Y - head.Y);
+	float width = height * 0.4f;
+
+	if (config::context.draw_box)
+	{
+		draw_list->AddRect({ head.X - width * 0.5f, head.Y }, { head.X + width * 0.5f, foot.Y }, utilities::color_to_value(config::context.box_color), 0.f, 15, 1.5f);
+	}
+}
+
+static void item_esp(ImDrawList* draw_list, ACharacter* actor)
 {
 
 }
 
-static void item_esp(const ImDrawList* draw_list, ACharacter* actor)
+static void hud_indicators(ImDrawList* draw_list, ACharacter* local_player)
 {
+	if (!config::context.hud_indicators)
+	{
+		return;
+	}
 
-}
+	if (!local_player || !local_player->IsDead())
+	{
+		return;
+	}
 
-static void hud_indicators(const ImDrawList* draw_list, ACharacter* local_player)
-{
+	ACharacter* ship = local_player->GetCurrentShip();
 
+	if (!ship || !ship->isShip())
+	{
+		return;
+	}
+
+	float velocity = (ship->GetVelocity() * 0.01f).Size();
+	std::uint32_t holes = ship->GetHullDamage()->ActiveHullDamageZones.Count;
+	float internal_water = ship->GetInternalWater()->GetNormalizedWaterAmount() * 100.f;
+
+	ImVec4 color = { 255.f, 0.f, 0.f, 255.f };
+	FVector2D screen = { 40, 20 };
+	char buffer[MAX_PATH];
+	sprintf_s(buffer, "Velocity: %.0fm/s", velocity);
+	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+	screen.Y += 20.f;
+
+	sprintf_s(buffer, "Holes: %u", holes);
+	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+	screen.Y += 20.f;
+
+	sprintf_s(buffer, "Water: %.0f%%", internal_water);
+	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
 }
 
 static bool is_ready()
@@ -221,39 +300,39 @@ static bool is_ready()
 		return false;
 	}
 
-	const UWorld* world = *UWorld::GWorld;
+	UWorld* world = *UWorld::GWorld;
 	if (!world)
 	{
 		return false;
 	}
 
-	const UGameInstance* game = world->GameInstance;
+	UGameInstance* game = world->GameInstance;
 	if (!game)
 	{
 		return false;
 	}
 
-	const ULocalPlayer* local_player = game->LocalPlayers[0];
+	ULocalPlayer* local_player = game->LocalPlayers[0];
 
 	if (!local_player)
 	{
 		return false;
 	}
 
-	const APlayerController* local_controller = local_player->PlayerController;
+	APlayerController* local_controller = local_player->PlayerController;
 	if (!local_controller)
 	{
 		return false;
 	}
 
-	const ACharacter* local_character = local_controller->Character;
+	ACharacter* local_character = local_controller->Character;
 
 	if (!local_character)
 	{
 		return false;
 	}
 
-	if (const_cast<ACharacter*>(local_character)->IsLoading())
+	if (local_character->IsLoading())
 	{
 		return false;
 	}
@@ -261,14 +340,14 @@ static bool is_ready()
 	return true;
 }
 
-void engine::run_visuals(const ImDrawList* draw_list)
+void engine::run_visuals(ImDrawList* draw_list)
 {
 	if (!game_viewport)
 	{
 		return;
 	}
 
-	const ULocalPlayer* local_player = game_viewport->GameInstance->LocalPlayers[0];
+	ULocalPlayer* local_player = game_viewport->GameInstance->LocalPlayers[0];
 	if (!local_player)
 	{
 		return;
@@ -298,8 +377,7 @@ void engine::run_visuals(const ImDrawList* draw_list)
 		return;
 	}
 
-	const TArray<ULevel*> levels = game_viewport->World->Levels;
-
+	TArray<ULevel*> levels = game_viewport->World->Levels;
 	for (std::uint32_t i = 0; i < levels.Count; i++)
 	{
 		if (!levels[i])
@@ -307,20 +385,21 @@ void engine::run_visuals(const ImDrawList* draw_list)
 			continue;
 		}
 
-		const TArray<ACharacter*> actors = levels[i]->AActors;
+		TArray<ACharacter*> actors = levels[i]->AActors;
 		for (std::uint32_t j = 0; j < actors.Count; j++)
 		{
-			const ACharacter* actor = actors[j];
+			ACharacter* actor = actors[j];
 			if (!actor || actor == local_player_character)
 			{
 				continue;
 			}
 
 			ship_esp(draw_list, actor);
-			//player_esp(draw_list);
+			player_esp(draw_list, actor);
 			//item_esp(draw_list);
 		}
 	}
 
 	ship_hole_esp(draw_list, local_player_character);
+	hud_indicators(draw_list, local_player_character);
 }

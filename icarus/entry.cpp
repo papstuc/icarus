@@ -50,12 +50,12 @@ DWORD WINAPI release()
 	return TRUE;
 }
 
-BOOL WINAPI DllMain(const HINSTANCE instance, const DWORD call_reason, const void* reserved)
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD call_reason, void* reserved)
 {
 	switch (call_reason)
 	{
 		case DLL_PROCESS_ATTACH:
-			if (const HANDLE handle = CreateThread(nullptr, 0, initialize, instance, 0, nullptr))
+			if (HANDLE handle = CreateThread(nullptr, 0, initialize, instance, 0, nullptr))
 			{
 				CloseHandle(handle);
 			}

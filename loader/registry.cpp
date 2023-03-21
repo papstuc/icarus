@@ -2,7 +2,7 @@
 
 #include "registry.hpp"
 
-bool registry::query_value(const wchar_t* path, const wchar_t* value_name, wchar_t* output, const std::uint64_t size)
+bool registry::query_value(const wchar_t* path, const wchar_t* value_name, wchar_t* output, std::uint64_t size)
 {
 	if (!path || !value_name || !output)
 	{

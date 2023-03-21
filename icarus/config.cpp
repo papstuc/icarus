@@ -17,11 +17,10 @@ static bool get_sot_path(std::filesystem::path& path)
 	}
 
 	path = std::filesystem::path(module_path).parent_path().parent_path().parent_path();
-
 	return std::filesystem::exists(path);
 }
 
-static bool read_config(const std::filesystem::path path, config::config_t& config)
+static bool read_config(std::filesystem::path path, config::config_t& config)
 {
 	if (!std::filesystem::exists(path) || path.extension() != ".cfg")
 	{
@@ -42,11 +41,10 @@ static bool read_config(const std::filesystem::path path, config::config_t& conf
 	input.read(reinterpret_cast<char*>(&config), sizeof(config));
 	input.close();
 
-
 	return true;
 }
 
-static bool write_config(const std::filesystem::path path, config::config_t& config)
+static bool write_config(std::filesystem::path path, config::config_t& config)
 {
 	std::ofstream output(path, std::ios::binary);
 	output.write(reinterpret_cast<const char*>(&config::magic), sizeof(config::magic));
@@ -84,7 +82,6 @@ bool config::save_config(const char* config_name)
 	std::filesystem::path path;
 	if (!get_sot_path(path))
 	{
-		std::cout << "path" << std::endl;
 		return false;
 	}
 
@@ -99,7 +96,6 @@ bool config::save_config(const char* config_name)
 
 	if (!write_config(path, config))
 	{
-		std::cout << "failed to write" << std::endl;
 		return false;
 	}
 
