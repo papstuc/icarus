@@ -12,7 +12,7 @@ DWORD WINAPI initialize(void* instance)
 {
 	while (!GetModuleHandle(L"gameoverlayrenderer64.dll") && !GetModuleHandle(L"dxgi.dll"))
 	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	}
 
 #ifdef _DEBUG

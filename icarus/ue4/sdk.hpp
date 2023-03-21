@@ -1085,7 +1085,7 @@ struct ACharacter : APawn
 		{
 			AAthenaPlayerCharacter* Character;
 			float ReturnValue = 0.f;
-		}params;
+		} params;
 		params.Character = Character;
 		ProcessEvent(this, fn, &params);
 		return params.ReturnValue;

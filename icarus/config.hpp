@@ -33,6 +33,9 @@ namespace config
 		float item_render_distance = 500.f;
 
 		bool hud_indicators = false;
+		bool hud_velocity = false;
+		bool hud_holes = false;
+		bool hud_water = false;
 	} context_t;
 
 	typedef struct _config_t

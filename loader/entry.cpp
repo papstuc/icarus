@@ -98,14 +98,14 @@ int wmain(int argc, wchar_t** argv)
 		}
 	}
 
-	if (!process::inject_dll(process_id, binary_path, sizeof(binary_path)))
+	if (process::inject_dll(process_id, binary_path, sizeof(binary_path)))
 	{
-		printf("[-] failed to inject binary\n");
-		return EXIT_FAILURE;
+		printf("[+] binary injected\n");
 	}
 	else
 	{
-		printf("[+] binary injected\n");
+		printf("[-] failed to inject binary\n");
+		return EXIT_FAILURE;
 	}
 
 	return EXIT_SUCCESS;

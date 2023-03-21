@@ -141,19 +141,21 @@ static void ship_esp(ImDrawList* draw_list, ACharacter* actor)
 	}
 }
 
-static void ship_hole_esp(ImDrawList* draw_list, ACharacter* local_player)
+static void ship_hole_esp(ImDrawList* draw_list)
 {
 	if (!config::context.draw_ship_holes)
 	{
 		return;
 	}
 
-	if (!local_player || local_player->IsDead())
+	AAthenaPlayerCharacter* lp = ((AAthenaPlayerCharacter*)player_controller->K2_GetPawn());
+
+	if (!lp || lp->IsDead())
 	{
 		return;
 	}
 
-	ACharacter* ship = local_player->GetCurrentShip();
+	ACharacter* ship = lp->GetCurrentShip();
 
 	if (!ship || !ship->isShip())
 	{
@@ -202,7 +204,7 @@ static void player_esp(ImDrawList* draw_list, ACharacter* actor)
 		return;
 	}
 
-	FVector local_player_location = local_player_character->K2_GetActorLocation();
+	FVector local_player_location = ((AAthenaPlayerCharacter*)player_controller->K2_GetPawn())->K2_GetActorLocation();
 	FVector location = actor->K2_GetActorLocation();
 
 	float distance = local_player_location.DistTo(location) * 0.01f;
@@ -226,11 +228,6 @@ static void player_esp(ImDrawList* draw_list, ACharacter* actor)
 		return;
 	}
 
-	if (!player_controller->LineOfSightTo(actor, player_controller->PlayerCameraManager->GetCameraLocation(), false))
-	{
-		return;
-	}
-
 	float height = std::abs(foot.Y - head.Y);
 	float width = height * 0.4f;
 
@@ -245,12 +242,14 @@ static void item_esp(ImDrawList* draw_list, ACharacter* actor)
 
 }
 
-static void hud_indicators(ImDrawList* draw_list, ACharacter* local_player)
+static void hud_indicators(ImDrawList* draw_list)
 {
 	if (!config::context.hud_indicators)
 	{
 		return;
 	}
+
+	AAthenaPlayerCharacter* local_player = ((AAthenaPlayerCharacter*)player_controller->K2_GetPawn());
 
 	if (!local_player || !local_player->IsDead())
 	{
@@ -259,7 +258,7 @@ static void hud_indicators(ImDrawList* draw_list, ACharacter* local_player)
 
 	ACharacter* ship = local_player->GetCurrentShip();
 
-	if (!ship || !ship->isShip())
+	if (!ship)
 	{
 		return;
 	}
@@ -269,18 +268,28 @@ static void hud_indicators(ImDrawList* draw_list, ACharacter* local_player)
 	float internal_water = ship->GetInternalWater()->GetNormalizedWaterAmount() * 100.f;
 
 	ImVec4 color = { 255.f, 0.f, 0.f, 255.f };
-	FVector2D screen = { 40, 20 };
+	FVector2D screen = { 40, 100 };
 	char buffer[MAX_PATH];
-	sprintf_s(buffer, "Velocity: %.0fm/s", velocity);
-	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
-	screen.Y += 20.f;
 
-	sprintf_s(buffer, "Holes: %u", holes);
-	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
-	screen.Y += 20.f;
+	if (config::context.hud_velocity)
+	{
+		sprintf_s(buffer, "Velocity: %.0fm/s", velocity);
+		draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+		screen.Y += 20.f;
+	}
 
-	sprintf_s(buffer, "Water: %.0f%%", internal_water);
-	draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+	if (config::context.hud_holes)
+	{
+		sprintf_s(buffer, "Holes: %u", holes);
+		draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+		screen.Y += 20.f;
+	}
+
+	if (config::context.hud_water)
+	{
+		sprintf_s(buffer, "Water: %.0f%%", internal_water);
+		draw_list->AddText(nullptr, 15.f, ImVec2(screen.X, screen.Y), ImGui::ColorConvertFloat4ToU32(color), buffer);
+	}
 }
 
 static bool is_ready()
@@ -400,6 +409,6 @@ void engine::run_visuals(ImDrawList* draw_list)
 		}
 	}
 
-	ship_hole_esp(draw_list, local_player_character);
-	hud_indicators(draw_list, local_player_character);
+	ship_hole_esp(draw_list);
+	hud_indicators(draw_list);
 }
